@@ -1,10 +1,10 @@
 const mysql = require('mysql2/promise');
 
-// 数据库配置
+// 数据库配置（必须使用环境变量，不能硬编码密码）
 const dbConfig = {
   host: process.env.DB_HOST || 'localhost',
   user: process.env.DB_USER || 'root',
-  password: process.env.DB_PASSWORD || 'Yue518489@',
+  password: process.env.DB_PASSWORD || '', // 必须通过环境变量设置
   database: process.env.DB_NAME || 'mathmaster',
   waitForConnections: true,
   connectionLimit: 10,
@@ -14,21 +14,30 @@ const dbConfig = {
 // 创建连接池
 const pool = mysql.createPool(dbConfig);
 
-// 测试数据库连接
+// 测试数据库连接（带超时）
 async function testConnection() {
-  try {
-    const connection = await pool.getConnection();
-    console.log('✅ MySQL 数据库连接成功！');
-    connection.release();
-    return true;
-  } catch (error) {
-    console.error('❌ MySQL 数据库连接失败:', error.message);
-    console.error('请确保：');
-    console.error('1. MySQL 服务已启动');
-    console.error('2. 数据库已创建（运行 init.sql 脚本）');
-    console.error('3. 数据库配置正确（检查 .env 或 db.js）');
-    return false;
-  }
+  return new Promise(async (resolve) => {
+    const timeout = setTimeout(() => {
+      console.error('❌ MySQL 数据库连接超时（5秒）');
+      resolve(false);
+    }, 5000);
+
+    try {
+      const connection = await pool.getConnection();
+      clearTimeout(timeout);
+      console.log('✅ MySQL 数据库连接成功！');
+      connection.release();
+      resolve(true);
+    } catch (error) {
+      clearTimeout(timeout);
+      console.error('❌ MySQL 数据库连接失败:', error.message);
+      console.error('请确保：');
+      console.error('1. MySQL 服务已启动');
+      console.error('2. 数据库已创建（运行 init.sql 脚本）');
+      console.error('3. 数据库配置正确（检查 .env 或 db.js）');
+      resolve(false);
+    }
+  });
 }
 
 // 执行查询（返回结果）

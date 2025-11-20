@@ -1,14 +1,15 @@
 services:
+  # Web 服务（后端 + 前端）
   - type: web
     name: mathmaster
     env: node
     buildCommand: npm install
     startCommand: npm start
     envVars:
-      - key: PORT
-        value: 3001
       - key: NODE_ENV
         value: production
+      - key: PORT
+        value: 3001
       - key: JWT_SECRET
         generateValue: true
       - key: DB_HOST
@@ -21,8 +22,11 @@ services:
         sync: false
 
 databases:
+  # MySQL 数据库（免费套餐）
   - name: mathmaster-db
     plan: free
     databaseName: mathmaster
     user: mathmaster
+
+
 

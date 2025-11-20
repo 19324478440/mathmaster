@@ -2,7 +2,8 @@ const express = require('express');
 const jwt = require('jsonwebtoken');
 const cors = require('cors');
 const path = require('path');
-const { query, queryOne, testConnection } = require('./db');
+// 自动检测数据库类型并使用相应的适配器
+const { query, queryOne, testConnection } = require('./db-universal');
 
 const app = express();
 // 支持 Render 等平台的端口配置
@@ -66,26 +67,47 @@ app.post('/api/register', async (req, res) => {
       return res.status(400).json({ error: '用户名已存在，请选择其他用户名' });
     }
 
-    // 插入新用户
-    const result = await query(
-      `INSERT INTO users (username, password, name, grade, specialty, learning_goal, challenge_direction, completed_levels, notes_count, consecutive_days, points, created_at) 
-       VALUES (?, ?, ?, ?, ?, ?, ?, 0, 0, 0, 0, NOW())`,
-      [
-        username,
-        password,
-        name || username,
-        grade || null,
-        specialty || null,
-        learning_goal || null,
-        challenge_direction || null
-      ]
-    );
-
-    // 获取新创建的用户
-    const newUser = await queryOne(
-      'SELECT id, username, name, grade, specialty, learning_goal, challenge_direction, completed_levels, notes_count, consecutive_days, points FROM users WHERE id = ?',
-      [result.insertId]
-    );
+    // 插入新用户（兼容 MySQL 和 PostgreSQL）
+    const isPostgres = process.env.DB_TYPE === 'postgres' || (process.env.DB_HOST && process.env.DB_HOST.includes('postgres'));
+    let result, newUser;
+    
+    if (isPostgres) {
+      // PostgreSQL 使用 RETURNING 子句
+      newUser = await queryOne(
+        `INSERT INTO users (username, password, name, grade, specialty, learning_goal, challenge_direction, completed_levels, notes_count, consecutive_days, points, created_at) 
+         VALUES ($1, $2, $3, $4, $5, $6, $7, 0, 0, 0, 0, NOW()) 
+         RETURNING id, username, name, grade, specialty, learning_goal, challenge_direction, completed_levels, notes_count, consecutive_days, points`,
+        [
+          username,
+          password,
+          name || username,
+          grade || null,
+          specialty || null,
+          learning_goal || null,
+          challenge_direction || null
+        ]
+      );
+    } else {
+      // MySQL 使用传统方式
+      result = await query(
+        `INSERT INTO users (username, password, name, grade, specialty, learning_goal, challenge_direction, completed_levels, notes_count, consecutive_days, points, created_at) 
+         VALUES (?, ?, ?, ?, ?, ?, ?, 0, 0, 0, 0, NOW())`,
+        [
+          username,
+          password,
+          name || username,
+          grade || null,
+          specialty || null,
+          learning_goal || null,
+          challenge_direction || null
+        ]
+      );
+      // 获取新创建的用户
+      newUser = await queryOne(
+        'SELECT id, username, name, grade, specialty, learning_goal, challenge_direction, completed_levels, notes_count, consecutive_days, points FROM users WHERE id = ?',
+        [result.insertId]
+      );
+    }
 
     // 生成JWT token
     const token = jwt.sign(
@@ -144,7 +166,7 @@ app.post('/api/login', async (req, res) => {
         return res.status(401).json({ error: '请输入密码' });
       }
       if (user.password !== password) {
-        return res.status(401).json({ error: '用户名或密码错误' });
+      return res.status(401).json({ error: '用户名或密码错误' });
       }
     }
 
@@ -354,7 +376,7 @@ app.post('/api/checkin', authenticateToken, async (req, res) => {
 
     // 更新数据库
     await query(
-      'UPDATE users SET last_checkin = CURDATE(), consecutive_days = ?, points = ? WHERE id = ?',
+      `UPDATE users SET last_checkin = ${process.env.DB_TYPE === 'postgres' || (process.env.DB_HOST && process.env.DB_HOST.includes('postgres')) ? 'CURRENT_DATE' : 'CURDATE()'}, consecutive_days = ?, points = ? WHERE id = ?`,
       [newConsecutiveDays, newPoints, req.user.id]
     );
 
@@ -452,18 +474,23 @@ app.post('/api/contact', authenticateToken, async (req, res) => {
 // 健康检查端点
 app.get('/api/health', async (req, res) => {
   try {
-    // 测试数据库连接
-    await query('SELECT 1');
+    // 测试数据库连接（不阻塞响应）
+    const dbConnected = await Promise.race([
+      query('SELECT 1').then(() => true),
+      new Promise(resolve => setTimeout(() => resolve(false), 2000))
+    ]);
+    
     res.json({
-      status: 'healthy',
+      status: dbConnected ? 'healthy' : 'degraded',
       message: 'MathMaster API 服务运行正常',
-      database: 'connected',
+      database: dbConnected ? 'connected' : 'disconnected',
       timestamp: new Date().toISOString()
     });
   } catch (error) {
-    res.status(503).json({
-      status: 'unhealthy',
-      message: '数据库连接失败',
+    // 即使数据库连接失败，也返回服务可用状态
+    res.json({
+      status: 'degraded',
+      message: 'API 服务运行正常，但数据库未连接',
       database: 'disconnected',
       timestamp: new Date().toISOString()
     });
@@ -485,18 +512,7 @@ app.use((req, res) => {
 
 // 启动服务器
 async function startServer() {
-  // 测试数据库连接
-  const dbConnected = await testConnection();
-  
-  if (!dbConnected) {
-    console.error('\n❌ 数据库连接失败，服务器无法启动！');
-    console.error('请先：');
-    console.error('1. 确保 MySQL 服务已启动');
-    console.error('2. 运行 init.sql 脚本初始化数据库');
-    console.error('3. 检查 db.js 中的数据库配置\n');
-    process.exit(1);
-  }
-
+  // 立即启动服务器，不等待数据库连接
   app.listen(PORT, () => {
     console.log('========================================');
     console.log('MathMaster 后端服务器启动成功！');
@@ -514,8 +530,22 @@ async function startServer() {
     console.log('  POST   /api/contact            - 提交联系表单');
     console.log('  GET    /api/health             - 健康检查');
     console.log('========================================');
-    console.log('提示：可以直接访问 http://localhost:3000 查看网站');
+    console.log('提示：可以直接访问 http://localhost:3001 查看网站');
     console.log('========================================');
+  });
+
+  // 异步测试数据库连接（不阻塞服务器启动）
+  testConnection().then(dbConnected => {
+    if (!dbConnected) {
+      console.warn('\n⚠️  数据库连接失败');
+      console.warn('请先：');
+      console.warn('1. 确保 MySQL 服务已启动');
+      console.warn('2. 运行 init.sql 脚本初始化数据库');
+      console.warn('3. 检查 db.js 中的数据库配置');
+      console.warn('注意：部分功能可能无法正常使用\n');
+    }
+  }).catch(err => {
+    console.error('数据库连接测试出错:', err);
   });
 }
 
