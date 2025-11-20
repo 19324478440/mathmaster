@@ -6,19 +6,29 @@ let pool, query, queryOne, testConnection;
 if (DB_TYPE === 'postgres') {
   // PostgreSQL 配置
   const { Pool: PgPool } = require('pg');
-  const pgPool = new PgPool({
-    host: process.env.DB_HOST,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME,
-    port: process.env.DB_PORT || 5432,
-    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
-    connectionTimeoutMillis: 5000,
-    idleTimeoutMillis: 30000,
-    max: 2
-  });
-
-  pool = pgPool;
+  let pgPool;
+  
+  // 只有在环境变量存在时才创建连接池
+  if (process.env.DB_HOST && process.env.DB_USER && process.env.DB_PASSWORD) {
+    pgPool = new PgPool({
+      host: process.env.DB_HOST,
+      user: process.env.DB_USER,
+      password: process.env.DB_PASSWORD,
+      database: process.env.DB_NAME || 'postgres',
+      port: process.env.DB_PORT || 5432,
+      ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+      connectionTimeoutMillis: 5000,
+      idleTimeoutMillis: 30000,
+      max: 2
+    });
+    pool = pgPool;
+  } else {
+    // 环境变量未设置，创建空的占位函数
+    pool = null;
+    query = async () => { throw new Error('数据库环境变量未设置'); };
+    queryOne = async () => { throw new Error('数据库环境变量未设置'); };
+    testConnection = async () => false;
+  }
 
   // 转换 MySQL 占位符 ? 为 PostgreSQL 占位符 $1, $2, ...
   function convertQuery(sql, params = []) {
@@ -27,53 +37,55 @@ if (DB_TYPE === 'postgres') {
     return { sql: convertedSql, params };
   }
 
-  query = async (sql, params = []) => {
-    try {
-      const { sql: convertedSql, params: convertedParams } = convertQuery(sql, params);
-      // 添加超时保护（5秒）
-      const result = await Promise.race([
-        pgPool.query(convertedSql, convertedParams),
-        new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('数据库查询超时')), 5000)
-        )
-      ]);
-      // PostgreSQL 返回 result.rows，需要添加 insertId 兼容性
-      const rows = result.rows || [];
-      // 如果查询包含 RETURNING id，提取 id 作为 insertId
-      if (sql.toUpperCase().includes('RETURNING') && rows.length > 0 && rows[0].id) {
-        rows.insertId = rows[0].id;
-      }
-      return rows;
-    } catch (error) {
-      console.error('PostgreSQL 查询错误:', error);
-      throw error;
-    }
-  };
-
-  queryOne = async (sql, params = []) => {
-    const results = await query(sql, params);
-    return results[0] || null;
-  };
-
-  testConnection = async () => {
-    return new Promise(async (resolve) => {
-      const timeout = setTimeout(() => {
-        console.error('❌ PostgreSQL 数据库连接超时（5秒）');
-        resolve(false);
-      }, 5000);
-
+  if (pgPool) {
+    query = async (sql, params = []) => {
       try {
-        await pgPool.query('SELECT NOW()');
-        clearTimeout(timeout);
-        console.log('✅ PostgreSQL 数据库连接成功！');
-        resolve(true);
+        const { sql: convertedSql, params: convertedParams } = convertQuery(sql, params);
+        // 添加超时保护（5秒）
+        const result = await Promise.race([
+          pgPool.query(convertedSql, convertedParams),
+          new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('数据库查询超时')), 5000)
+          )
+        ]);
+        // PostgreSQL 返回 result.rows，需要添加 insertId 兼容性
+        const rows = result.rows || [];
+        // 如果查询包含 RETURNING id，提取 id 作为 insertId
+        if (sql.toUpperCase().includes('RETURNING') && rows.length > 0 && rows[0].id) {
+          rows.insertId = rows[0].id;
+        }
+        return rows;
       } catch (error) {
-        clearTimeout(timeout);
-        console.error('❌ PostgreSQL 数据库连接失败:', error.message);
-        resolve(false);
+        console.error('PostgreSQL 查询错误:', error);
+        throw error;
       }
-    });
-  };
+    };
+
+    queryOne = async (sql, params = []) => {
+      const results = await query(sql, params);
+      return results[0] || null;
+    };
+
+    testConnection = async () => {
+      return new Promise(async (resolve) => {
+        const timeout = setTimeout(() => {
+          console.error('❌ PostgreSQL 数据库连接超时（5秒）');
+          resolve(false);
+        }, 5000);
+
+        try {
+          await pgPool.query('SELECT NOW()');
+          clearTimeout(timeout);
+          console.log('✅ PostgreSQL 数据库连接成功！');
+          resolve(true);
+        } catch (error) {
+          clearTimeout(timeout);
+          console.error('❌ PostgreSQL 数据库连接失败:', error.message);
+          resolve(false);
+        }
+      });
+    };
+  }
 } else {
   // MySQL 配置
   const mysql = require('mysql2/promise');
