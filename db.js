@@ -22,21 +22,21 @@ async function testConnection() {
       resolve(false);
     }, 5000);
 
-    try {
-      const connection = await pool.getConnection();
+  try {
+    const connection = await pool.getConnection();
       clearTimeout(timeout);
-      console.log('✅ MySQL 数据库连接成功！');
-      connection.release();
+    console.log('✅ MySQL 数据库连接成功！');
+    connection.release();
       resolve(true);
-    } catch (error) {
+  } catch (error) {
       clearTimeout(timeout);
-      console.error('❌ MySQL 数据库连接失败:', error.message);
-      console.error('请确保：');
-      console.error('1. MySQL 服务已启动');
-      console.error('2. 数据库已创建（运行 init.sql 脚本）');
-      console.error('3. 数据库配置正确（检查 .env 或 db.js）');
+    console.error('❌ MySQL 数据库连接失败:', error.message);
+    console.error('请确保：');
+    console.error('1. MySQL 服务已启动');
+    console.error('2. 数据库已创建（运行 init.sql 脚本）');
+    console.error('3. 数据库配置正确（检查 .env 或 db.js）');
       resolve(false);
-    }
+  }
   });
 }
 

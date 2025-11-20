@@ -90,23 +90,23 @@ app.post('/api/register', async (req, res) => {
     } else {
       // MySQL 使用传统方式
       result = await query(
-        `INSERT INTO users (username, password, name, grade, specialty, learning_goal, challenge_direction, completed_levels, notes_count, consecutive_days, points, created_at) 
-         VALUES (?, ?, ?, ?, ?, ?, ?, 0, 0, 0, 0, NOW())`,
-        [
-          username,
-          password,
-          name || username,
-          grade || null,
-          specialty || null,
-          learning_goal || null,
-          challenge_direction || null
-        ]
-      );
-      // 获取新创建的用户
+      `INSERT INTO users (username, password, name, grade, specialty, learning_goal, challenge_direction, completed_levels, notes_count, consecutive_days, points, created_at) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, 0, 0, 0, 0, NOW())`,
+      [
+        username,
+        password,
+        name || username,
+        grade || null,
+        specialty || null,
+        learning_goal || null,
+        challenge_direction || null
+      ]
+    );
+    // 获取新创建的用户
       newUser = await queryOne(
-        'SELECT id, username, name, grade, specialty, learning_goal, challenge_direction, completed_levels, notes_count, consecutive_days, points FROM users WHERE id = ?',
-        [result.insertId]
-      );
+      'SELECT id, username, name, grade, specialty, learning_goal, challenge_direction, completed_levels, notes_count, consecutive_days, points FROM users WHERE id = ?',
+      [result.insertId]
+    );
     }
 
     // 生成JWT token
