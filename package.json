@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "description": "高中数学学习平台全栈应用",
   "scripts": {
-    "build": "echo 'No build needed'",
-    "vercel-build": "echo 'No build needed'"
+    "build": "node build.js",
+    "vercel-build": "node build.js"
   },
   "dependencies": {
     "cors": "^2.8.5",
