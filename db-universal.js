@@ -12,7 +12,10 @@ if (DB_TYPE === 'postgres') {
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
     port: process.env.DB_PORT || 5432,
-    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+    connectionTimeoutMillis: 5000,
+    idleTimeoutMillis: 30000,
+    max: 2
   });
 
   pool = pgPool;
@@ -27,7 +30,13 @@ if (DB_TYPE === 'postgres') {
   query = async (sql, params = []) => {
     try {
       const { sql: convertedSql, params: convertedParams } = convertQuery(sql, params);
-      const result = await pgPool.query(convertedSql, convertedParams);
+      // 添加超时保护（5秒）
+      const result = await Promise.race([
+        pgPool.query(convertedSql, convertedParams),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('数据库查询超时')), 5000)
+        )
+      ]);
       // PostgreSQL 返回 result.rows，需要添加 insertId 兼容性
       const rows = result.rows || [];
       // 如果查询包含 RETURNING id，提取 id 作为 insertId
@@ -74,15 +83,22 @@ if (DB_TYPE === 'postgres') {
     password: process.env.DB_PASSWORD || '',
     database: process.env.DB_NAME || 'mathmaster',
     waitForConnections: true,
-    connectionLimit: 10,
-    queueLimit: 0
+    connectionLimit: 2,
+    queueLimit: 0,
+    connectTimeout: 5000
   });
 
   pool = mysqlPool;
 
   query = async (sql, params = []) => {
     try {
-      const [results] = await mysqlPool.execute(sql, params);
+      // 添加超时保护（5秒）
+      const [results] = await Promise.race([
+        mysqlPool.execute(sql, params),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('数据库查询超时')), 5000)
+        )
+      ]);
       // MySQL 返回 [results, fields]，需要添加 insertId
       if (results.insertId !== undefined) {
         return results;
