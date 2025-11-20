@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MathMaster - 高中数学学习平台</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- 登录页面 -->
+    <div id="loginPage" class="page active">
+        <div class="login-container">
+            <!-- 登录表单 -->
+            <div id="loginCard" class="login-card fade-in">
+                <div class="login-header">
+                    <h1>📐 MathMaster</h1>
+                    <p>高中数学学习平台</p>
+                </div>
+                
+                <form id="loginForm">
+                    <div class="form-group">
+                        <label>用户名</label>
+                        <input type="text" class="form-control" id="username" placeholder="请输入用户名" required>
+                    </div>
+                    <div class="form-group">
+                        <label>密码</label>
+                        <input type="password" class="form-control" id="password" placeholder="请输入密码（可留空）">
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 15px; padding: 12px;">
+                        登录
+                    </button>
+                    <button type="button" id="quickLoginBtn" class="btn btn-success" style="width: 100%; margin-top: 10px; padding: 12px;">
+                        快速体验
+                    </button>
+                </form>
+                
+                <div class="demo-info">
+                    <p><strong>演示账号：</strong></p>
+                    <p>用户名：demo</p>
+                    <p>密码：demo（或留空）</p>
+                </div>
+                
+                <div style="text-align: center; margin-top: 20px; padding-top: 20px; border-top: 1px solid #e0e0e0;">
+                    <p style="color: #666; margin-bottom: 10px;">还没有账号？</p>
+                    <button type="button" id="switchToRegisterBtn" class="btn btn-link" style="color: #7c3aed; text-decoration: none;">
+                        立即注册
+                    </button>
+                </div>
+            </div>
+            
+            <!-- 注册表单 -->
+            <div id="registerCard" class="login-card fade-in" style="display: none;">
+                <div class="login-header">
+                    <h1>📐 MathMaster</h1>
+                    <p>创建新账号</p>
+                </div>
+                
+                <form id="registerForm">
+                    <div class="form-group">
+                        <label>用户名 <span style="color: #999;">(3-20个字符)</span></label>
+                        <input type="text" class="form-control" id="regUsername" placeholder="请输入用户名" required minlength="3" maxlength="20">
+                    </div>
+                    <div class="form-group">
+                        <label>密码 <span style="color: #999;">(至少6个字符)</span></label>
+                        <input type="password" class="form-control" id="regPassword" placeholder="请输入密码" required minlength="6">
+                    </div>
+                    <div class="form-group">
+                        <label>确认密码</label>
+                        <input type="password" class="form-control" id="regPasswordConfirm" placeholder="请再次输入密码" required minlength="6">
+                    </div>
+                    <div class="form-group">
+                        <label>姓名 <span style="color: #999;">(可选)</span></label>
+                        <input type="text" class="form-control" id="regName" placeholder="请输入姓名">
+                    </div>
+                    <div class="form-group">
+                        <label>年级 <span style="color: #999;">(可选)</span></label>
+                        <select class="form-control" id="regGrade">
+                            <option value="">请选择年级</option>
+                            <option value="高一">高一</option>
+                            <option value="高二">高二</option>
+                            <option value="高三">高三</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>数学特长 <span style="color: #999;">(可选)</span></label>
+                        <input type="text" class="form-control" id="regSpecialty" placeholder="例如：函数与导数">
+                    </div>
+                    <div class="form-group">
+                        <label>学习目标 <span style="color: #999;">(可选)</span></label>
+                        <input type="text" class="form-control" id="regLearningGoal" placeholder="例如：冲击高考数学145+">
+                    </div>
+                    <div class="form-group">
+                        <label>挑战方向 <span style="color: #999;">(可选)</span></label>
+                        <input type="text" class="form-control" id="regChallengeDirection" placeholder="例如：函数综合题、导数应用">
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 15px; padding: 12px;">
+                        注册
+                    </button>
+                </form>
+                
+                <div style="text-align: center; margin-top: 20px; padding-top: 20px; border-top: 1px solid #e0e0e0;">
+                    <p style="color: #666; margin-bottom: 10px;">已有账号？</p>
+                    <button type="button" id="switchToLoginBtn" class="btn btn-link" style="color: #7c3aed; text-decoration: none;">
+                        返回登录
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 主应用 -->
+    <div id="mainApp" class="page">
+        <div class="container">
+            <!-- 导航栏 -->
+            <header>
+                <nav>
+                    <div class="logo">
+                        📐 MathMaster
+                    </div>
+                    <button id="mobileMenuBtn" class="mobile-menu-btn">☰</button>
+                    <ul class="nav-links">
+                        <li><a href="#" onclick="showPage('dashboard', this); return false;" class="nav-link active">首页</a></li>
+                        <li><a href="#" onclick="showPage('contextLearning', this); return false;" class="nav-link">情境学习</a></li>
+                        <li><a href="#" onclick="showPage('practiceLearning', this); return false;" class="nav-link">刷题闯关</a></li>
+                        <li><a href="#" onclick="showPage('notes', this); return false;" class="nav-link">心得</a></li>
+                        <li><a href="#" onclick="showPage('about', this); return false;" class="nav-link">关于</a></li>
+                        <li><a href="#" onclick="showPage('contact', this); return false;" class="nav-link">联系</a></li>
+                        <li><a href="#" onclick="logout()">退出</a></li>
+                    </ul>
+                </nav>
+            </header>
+
+            <!-- 移动端菜单 -->
+            <div id="mobileMenu" class="mobile-menu" style="display: none;">
+                <div class="mobile-menu-content">
+                    <div class="mobile-menu-header">
+                        <div class="logo">📐 MathMaster</div>
+                        <button id="mobileMenuClose" class="mobile-menu-close">×</button>
+                    </div>
+                    <ul class="mobile-menu-links">
+                        <li><a href="#" onclick="showPage('dashboard', this); return false;" class="nav-link active">首页</a></li>
+                        <li><a href="#" onclick="showPage('contextLearning', this); return false;" class="nav-link">情境学习</a></li>
+                        <li><a href="#" onclick="showPage('practiceLearning', this); return false;" class="nav-link">刷题闯关</a></li>
+                        <li><a href="#" onclick="showPage('notes', this); return false;" class="nav-link">心得</a></li>
+                        <li><a href="#" onclick="showPage('about', this); return false;" class="nav-link">关于</a></li>
+                        <li><a href="#" onclick="showPage('contact', this); return false;" class="nav-link">联系</a></li>
+                        <li><a href="#" onclick="logout()">退出</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- 首页 -->
+            <div id="dashboard" class="page-content active">
+                <div class="user-card fade-in">
+                    <div class="user-avatar">👨‍🎓</div>
+                    <div class="user-info">
+                        <h2 id="userName">数学小达人</h2>
+                        <p><strong>年级：</strong><span id="userGrade">高二</span></p>
+                        <p><strong>数学特长：</strong><span id="userSpecialty">函数与导数</span></p>
+                        <p><strong>学习目标：</strong><span id="userGoal">冲击高考数学145+</span></p>
+                        <p><strong>挑战方向：</strong><span id="userChallenge">函数综合题、导数应用</span></p>
+                        
+                        <div class="user-stats">
+                            <div class="stat-item">
+                                <span class="stat-number" id="completedLevels">12</span>
+                                <span class="stat-label">已通关</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-number" id="notesCount">8</span>
+                                <span class="stat-label">心得数</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-number" id="consecutiveDays">15</span>
+                                <span class="stat-label">连续天数</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-number" id="points">380</span>
+                                <span class="stat-label">积分</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="learning-section fade-in">
+                    <div class="section-header">
+                        <h2 class="section-title">🚀 快速开始</h2>
+                    </div>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
+                        <button class="btn btn-primary" style="padding: 15px; font-size: 16px;" onclick="showPage('contextLearning'); return false;">
+                            🌟 情境学习
+                        </button>
+                        <button class="btn btn-primary" style="padding: 15px; font-size: 16px;" onclick="showPage('practiceLearning'); return false;">
+                            🎯 刷题闯关
+                        </button>
+                        <button class="btn btn-primary" style="padding: 15px; font-size: 16px;" onclick="showPage('notes'); return false;">
+                            💡 查看心得
+                        </button>
+                        <button class="btn btn-primary" style="padding: 15px; font-size: 16px;" onclick="doCheckIn()">
+                            📅 每日打卡
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 情境学习页面 -->
+            <div id="contextLearning" class="page-content">
+                <div class="learning-section fade-in">
+                    <div class="section-header">
+                        <h2 class="section-title">🌟 情境引定义</h2>
+                        <p style="color: var(--text-regular); margin-top: 10px;">通过真实情境引入数学概念，让学习更有趣</p>
+                    </div>
+                    
+                    <div class="themes-grid">
+                        <div class="theme-card">
+                            <div class="theme-icon">🎡</div>
+                            <h3>函数的奥秘</h3>
+                            <p>通过游乐园摩天轮的运动轨迹，理解函数输入与输出的关系，感受数学描述现实世界的美妙。</p>
+                            <button class="btn btn-primary" onclick="startTheme('函数的奥秘')">开始学习</button>
+                        </div>
+                        
+                        <div class="theme-card">
+                            <div class="theme-icon">🧬</div>
+                            <h3>指数与对数</h3>
+                            <p>观察生物细胞分裂过程，体验指数爆炸式增长，理解指数函数的威力与对数的运算规律。</p>
+                            <button class="btn btn-primary" onclick="startTheme('指数与对数')">开始学习</button>
+                        </div>
+                        
+                        <div class="theme-card">
+                            <div class="theme-icon">🌊</div>
+                            <h3>三角函数</h3>
+                            <p>通过海洋潮汐的周期性涨落，掌握三角函数的周期特性，理解正弦余弦的波动规律。</p>
+                            <button class="btn btn-primary" onclick="startTheme('三角函数')">开始学习</button>
+                        </div>
+                        
+                        <div class="theme-card">
+                            <div class="theme-icon">💰</div>
+                            <h3>数列与求和</h3>
+                            <p>通过理财投资的复利计算，体会数列递推与求和的实际应用，掌握数学建模思维。</p>
+                            <button class="btn btn-primary" onclick="startTheme('数列与求和')">开始学习</button>
+                        </div>
+                        
+                        <div class="theme-card">
+                            <div class="theme-icon">🚗</div>
+                            <h3>导数初探</h3>
+                            <p>分析汽车从静止到高速的加速曲线，理解导数描述变化率的本质，掌握微积分基础。</p>
+                            <button class="btn btn-primary" onclick="startTheme('导数初探')">开始学习</button>
+                        </div>
+                        
+                        <div class="theme-card">
+                            <div class="theme-icon">🎲</div>
+                            <h3>概率统计</h3>
+                            <p>通过日常抽奖游戏，理解概率统计的基本概念，学会用数学思维分析随机事件。</p>
+                            <button class="btn btn-primary" onclick="startTheme('概率统计')">开始学习</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 刷题闯关页面 -->
+            <div id="practiceLearning" class="page-content">
+                <div class="learning-section fade-in">
+                    <div class="section-header">
+                        <h2 class="section-title">🎯 刷题进阶学</h2>
+                        <p style="color: var(--text-regular); margin-top: 10px;">通过闯关练习巩固知识，提升解题能力</p>
+                    </div>
+                    
+                    <div class="levels-container">
+                        <div class="theme-levels">
+                            <h3>🎡 函数的奥秘</h3>
+                            <div class="levels-grid">
+                                <div class="level-item completed" data-theme="函数的奥秘" data-level="1">✓</div>
+                                <div class="level-item completed" data-theme="函数的奥秘" data-level="2">✓</div>
+                                <div class="level-item completed" data-theme="函数的奥秘" data-level="3">✓</div>
+                                <div class="level-item" data-theme="函数的奥秘" data-level="4">4</div>
+                                <div class="level-item" data-theme="函数的奥秘" data-level="5">5</div>
+                                <div class="level-item" data-theme="函数的奥秘" data-level="6">6</div>
+                            </div>
+                        </div>
+                        
+                        <div class="theme-levels">
+                            <h3>🧬 指数与对数</h3>
+                            <div class="levels-grid">
+                                <div class="level-item completed" data-theme="指数与对数" data-level="1">✓</div>
+                                <div class="level-item completed" data-theme="指数与对数" data-level="2">✓</div>
+                                <div class="level-item" data-theme="指数与对数" data-level="3">3</div>
+                                <div class="level-item" data-theme="指数与对数" data-level="4">4</div>
+                                <div class="level-item" data-theme="指数与对数" data-level="5">5</div>
+                                <div class="level-item" data-theme="指数与对数" data-level="6">6</div>
+                            </div>
+                        </div>
+                        
+                        <div class="theme-levels">
+                            <h3>🌊 三角函数</h3>
+                            <div class="levels-grid">
+                                <div class="level-item completed" data-theme="三角函数" data-level="1">✓</div>
+                                <div class="level-item" data-theme="三角函数" data-level="2">2</div>
+                                <div class="level-item" data-theme="三角函数" data-level="3">3</div>
+                                <div class="level-item" data-theme="三角函数" data-level="4">4</div>
+                                <div class="level-item" data-theme="三角函数" data-level="5">5</div>
+                                <div class="level-item" data-theme="三角函数" data-level="6">6</div>
+                            </div>
+                        </div>
+                        
+                        <div class="theme-levels">
+                            <h3>💰 数列与求和</h3>
+                            <div class="levels-grid">
+                                <div class="level-item completed" data-theme="数列与求和" data-level="1">✓</div>
+                                <div class="level-item" data-theme="数列与求和" data-level="2">2</div>
+                                <div class="level-item" data-theme="数列与求和" data-level="3">3</div>
+                                <div class="level-item" data-theme="数列与求和" data-level="4">4</div>
+                                <div class="level-item" data-theme="数列与求和" data-level="5">5</div>
+                                <div class="level-item" data-theme="数列与求和" data-level="6">6</div>
+                            </div>
+                        </div>
+                        
+                        <div class="theme-levels">
+                            <h3>🚗 导数初探</h3>
+                            <div class="levels-grid">
+                                <div class="level-item" data-theme="导数初探" data-level="1">1</div>
+                                <div class="level-item" data-theme="导数初探" data-level="2">2</div>
+                                <div class="level-item" data-theme="导数初探" data-level="3">3</div>
+                                <div class="level-item" data-theme="导数初探" data-level="4">4</div>
+                                <div class="level-item" data-theme="导数初探" data-level="5">5</div>
+                                <div class="level-item" data-theme="导数初探" data-level="6">6</div>
+                            </div>
+                        </div>
+                        
+                        <div class="theme-levels">
+                            <h3>🎲 概率统计</h3>
+                            <div class="levels-grid">
+                                <div class="level-item" data-theme="概率统计" data-level="1">1</div>
+                                <div class="level-item" data-theme="概率统计" data-level="2">2</div>
+                                <div class="level-item" data-theme="概率统计" data-level="3">3</div>
+                                <div class="level-item" data-theme="概率统计" data-level="4">4</div>
+                                <div class="level-item" data-theme="概率统计" data-level="5">5</div>
+                                <div class="level-item" data-theme="概率统计" data-level="6">6</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 主题详情页面 -->
+            <div id="themeDetail" class="page-content">
+                <div class="learning-section fade-in">
+                    <div class="section-header">
+                        <button class="btn btn-primary" onclick="showPage('contextLearning'); return false;" style="margin-right: 20px;">← 返回</button>
+                        <h2 class="section-title" id="themeDetailTitle">📚 主题详情</h2>
+                    </div>
+                    <div id="themeDetailContent"></div>
+                </div>
+            </div>
+
+            <!-- 关卡详情页面 -->
+            <div id="levelDetail" class="page-content">
+                <div class="learning-section fade-in">
+                    <div class="section-header">
+                        <button class="btn btn-primary" onclick="goBackFromLevel()" style="margin-right: 20px;">← 返回</button>
+                        <h2 class="section-title" id="levelDetailTitle">🎯 关卡详情</h2>
+                    </div>
+                    <div id="levelDetailContent"></div>
+                </div>
+            </div>
+
+            <!-- 心得页面 -->
+            <div id="notes" class="page-content">
+                <div class="learning-section fade-in">
+                    <div class="section-header">
+                        <h2 class="section-title">💡 学习心得与讨论</h2>
+                    </div>
+                    
+                    <div id="notesList" class="notes-grid"></div>
+                    
+                    <!-- 分页控件 -->
+                    <div style="display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 30px; padding: 20px;">
+                        <button class="btn btn-primary" id="prevPageBtn" onclick="changeNotesPage(-1)" style="padding: 10px 20px;">上一页</button>
+                        <span id="pageInfo" style="padding: 10px 20px; color: var(--text-regular);">第 1 页，共 1 页</span>
+                        <button class="btn btn-primary" id="nextPageBtn" onclick="changeNotesPage(1)" style="padding: 10px 20px;">下一页</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 关于我们 -->
+            <div id="about" class="page-content">
+                <div class="learning-section fade-in">
+                    <div class="section-header">
+                        <h2 class="section-title">📖 关于 MathMaster</h2>
+                    </div>
+                    
+                    <div class="about-content">
+                        <h3>🎯 平台介绍</h3>
+                        <p>
+                            MathMaster 是由资深高中数学教师与专业开发团队联合打造的创新数学学习平台。
+                            我们坚信"以刷题代学、以情境引定义"的核心理念，通过真实情境激发学习兴趣，
+                            让学生在解题中自然理解抽象概念，实现边学边练、边练边闯关的高效学习模式。
+                        </p>
+                        
+                        <h3 style="margin-top: 25px;">✨ 核心优势</h3>
+                        <ul style="margin-left: 20px; line-height: 2;">
+                            <li><strong>情境化学习：</strong>六大主题，每个都通过真实生活情境引入，让数学不再抽象</li>
+                            <li><strong>梯度式训练：</strong>从基础到拔高，科学设置关卡难度，循序渐进提升能力</li>
+                            <li><strong>积分激励系统：</strong>通关获得积分，连续打卡奖励，让学习充满成就感</li>
+                            <li><strong>同伴交流社区：</strong>分享学习心得，交流解题思路，共同进步成长</li>
+                        </ul>
+                        
+                        <h3 style="margin-top: 25px;">👥 团队介绍</h3>
+                        <div class="team-grid">
+                            <div class="team-member">
+                                <div class="member-avatar">👨‍🏫</div>
+                                <h4>王老师</h4>
+                                <p>资深数学教师<br>20年教学经验</p>
+                            </div>
+                            <div class="team-member">
+                                <div class="member-avatar">👩‍💻</div>
+                                <h4>李工程师</h4>
+                                <p>技术负责人<br>10年开发经验</p>
+                            </div>
+                            <div class="team-member">
+                                <div class="member-avatar">🎨</div>
+                                <h4>张设计师</h4>
+                                <p>UI/UX设计师<br>专注教育产品</p>
+                            </div>
+                            <div class="team-member">
+                                <div class="member-avatar">📊</div>
+                                <h4>陈分析师</h4>
+                                <p>数据分析师<br>学习行为研究</p>
+                            </div>
+                        </div>
+                        
+                        <h3 style="margin-top: 25px;">🌟 平台愿景</h3>
+                        <p>
+                            让每一个高中生都能享受数学学习的乐趣，在轻松愉快的氛围中掌握数学知识，
+                            冲击高考高分，培养逻辑思维能力，为未来的学习和生活打下坚实基础。
+                            我们相信，数学不应该是负担，而应该是探索世界的工具！
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 联系我们 -->
+            <div id="contact" class="page-content">
+                <div class="learning-section fade-in">
+                    <div class="section-header">
+                        <h2 class="section-title">📧 联系我们</h2>
+                    </div>
+                    
+                    <div class="contact-form">
+                        <form id="contactForm">
+                            <div class="form-group">
+                                <label>姓名 *</label>
+                                <input type="text" class="form-control" id="contactName" required>
+                            </div>
+                            <div class="form-group">
+                                <label>联系方式 *</label>
+                                <input type="text" class="form-control" id="contactContact" placeholder="邮箱或手机号" required>
+                            </div>
+                            <div class="form-group">
+                                <label>问题描述 *</label>
+                                <textarea class="form-control" id="contactMessage" placeholder="请详细描述您的问题或建议..." required></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary" style="width: 100%; padding: 12px;">
+                                提交反馈
+                            </button>
+                        </form>
+                        
+                        <div style="margin-top: 30px; text-align: center; color: var(--text-regular);">
+                            <p>📧 邮箱：support@mathmaster.com</p>
+                            <p>📱 电话：400-123-4567</p>
+                            <p>🕐 工作时间：周一至周五 9:00-18:00</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
