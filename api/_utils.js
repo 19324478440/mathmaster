@@ -4,7 +4,16 @@ const jwt = require('jsonwebtoken');
 let dbModule = null;
 function getDbModule() {
   if (!dbModule) {
-    dbModule = require('../db-universal');
+    try {
+      dbModule = require('../db-universal');
+    } catch (error) {
+      console.error('数据库模块加载失败:', error);
+      // 返回占位函数
+      return {
+        query: async () => { throw new Error('数据库模块未加载'); },
+        queryOne: async () => { throw new Error('数据库模块未加载'); }
+      };
+    }
   }
   return dbModule;
 }
@@ -67,18 +76,23 @@ function parseBody(req) {
   }
 }
 
+// 延迟加载的查询函数
+const query = async (sql, params) => {
+  return getDbModule().query(sql, params);
+};
+
+const queryOne = async (sql, params) => {
+  return getDbModule().queryOne(sql, params);
+};
+
 module.exports = {
   corsHeaders,
   successResponse,
   errorResponse,
   authenticateToken,
   parseBody,
-  get query() {
-    return getDbModule().query;
-  },
-  get queryOne() {
-    return getDbModule().queryOne;
-  },
+  query,
+  queryOne,
   JWT_SECRET,
 };
 
