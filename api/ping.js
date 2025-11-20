@@ -1,6 +1,5 @@
 // GET /api/ping - 最简单的测试函数
 module.exports = async (req, res) => {
-  // 支持 Vercel 的新旧两种格式
   if (res) {
     return res.status(200).json({
       message: 'Pong!',
