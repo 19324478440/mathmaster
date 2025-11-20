@@ -1,6 +1,13 @@
 // 共享工具函数
 const jwt = require('jsonwebtoken');
-const { query, queryOne } = require('../db-universal');
+// 延迟加载数据库模块，避免在模块加载时阻塞
+let dbModule = null;
+function getDbModule() {
+  if (!dbModule) {
+    dbModule = require('../db-universal');
+  }
+  return dbModule;
+}
 
 const JWT_SECRET = process.env.JWT_SECRET || 'mathmaster_jwt_secret_key_2025';
 
@@ -66,8 +73,12 @@ module.exports = {
   errorResponse,
   authenticateToken,
   parseBody,
-  query,
-  queryOne,
+  get query() {
+    return getDbModule().query;
+  },
+  get queryOne() {
+    return getDbModule().queryOne;
+  },
   JWT_SECRET,
 };
 
