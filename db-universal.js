@@ -26,10 +26,10 @@ if (DB_TYPE === 'postgres') {
       database: process.env.DB_NAME || 'postgres',
       port: process.env.DB_PORT || 5432,
       ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
-      connectionTimeoutMillis: 10000,
+      connectionTimeoutMillis: 5000,
       idleTimeoutMillis: 30000,
       max: 2,
-      statement_timeout: 8000
+      statement_timeout: 4000
     });
     pool = pgPool;
 
@@ -43,11 +43,11 @@ if (DB_TYPE === 'postgres') {
     query = async (sql, params = []) => {
       try {
         const { sql: convertedSql, params: convertedParams } = convertQuery(sql, params);
-        // 添加超时保护（8秒）
+        // 添加超时保护（4秒）
         const result = await Promise.race([
           pgPool.query(convertedSql, convertedParams),
           new Promise((_, reject) => 
-            setTimeout(() => reject(new Error('数据库查询超时')), 8000)
+            setTimeout(() => reject(new Error('数据库查询超时')), 4000)
           )
         ]);
         // PostgreSQL 返回 result.rows，需要添加 insertId 兼容性
