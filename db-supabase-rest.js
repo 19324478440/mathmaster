@@ -52,11 +52,16 @@ async function supabaseRequest(table, method = 'GET', filters = {}, data = null)
   }
 
   try {
+    const requestStartTime = Date.now();
+    console.log('📡 Supabase REST API 请求:', { method, url: url.substring(0, 100) + '...', table });
+    
     const response = await fetch(url, options);
+    const requestDuration = Date.now() - requestStartTime;
+    console.log('✅ Supabase REST API 响应:', { status: response.status, duration: requestDuration + 'ms' });
     
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('Supabase REST API 错误:', response.status, errorText);
+      console.error('❌ Supabase REST API 错误:', response.status, errorText);
       throw new Error(`Supabase API 错误: ${response.status} - ${errorText}`);
     }
 
@@ -65,9 +70,10 @@ async function supabaseRequest(table, method = 'GET', filters = {}, data = null)
     }
 
     const result = await response.json();
+    console.log('📊 Supabase REST API 结果:', { resultCount: Array.isArray(result) ? result.length : 1 });
     return Array.isArray(result) ? result : [result];
   } catch (error) {
-    console.error('Supabase REST API 请求失败:', error);
+    console.error('❌ Supabase REST API 请求失败:', error.message);
     throw error;
   }
 }

@@ -23,23 +23,29 @@ module.exports = async (req) => {
     const body = parseBody(req);
     const { username, password } = body;
 
-    console.log('登录请求收到:', { username, hasPassword: !!password, timestamp: new Date().toISOString() });
+    console.log('🔐 登录请求收到:', { username, hasPassword: !!password, timestamp: new Date().toISOString() });
 
-    // 查询用户（添加超时保护，3秒内必须完成）
+    // 查询用户（添加超时保护，5秒内必须完成）
     let user;
     try {
+      const queryStartTime = Date.now();
+      console.log('📊 开始查询用户:', username);
+      
       user = await Promise.race([
         queryOne(
           'SELECT * FROM users WHERE username = ?',
           [username]
         ),
         new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('数据库查询超时（2秒）')), 2000)
+          setTimeout(() => reject(new Error('数据库查询超时（5秒）')), 5000)
         )
       ]);
-      console.log('数据库查询完成，耗时:', Date.now() - startTime, 'ms');
+      
+      const queryDuration = Date.now() - queryStartTime;
+      console.log('✅ 数据库查询完成，耗时:', queryDuration, 'ms');
     } catch (dbError) {
-      console.error('数据库查询错误:', dbError.message, '耗时:', Date.now() - startTime, 'ms');
+      const queryDuration = Date.now() - startTime;
+      console.error('❌ 数据库查询错误:', dbError.message, '耗时:', queryDuration, 'ms');
       return errorResponse('数据库连接失败，请稍后重试', 503);
     }
 
