@@ -19,21 +19,29 @@ module.exports = async (req) => {
   }
 
   try {
+    const startTime = Date.now();
     const body = parseBody(req);
     const { username, password } = body;
 
-    console.log('登录请求收到:', { username, hasPassword: !!password });
+    console.log('登录请求收到:', { username, hasPassword: !!password, timestamp: new Date().toISOString() });
 
-    // 查询用户（添加超时保护，5秒内必须完成）
-    const user = await Promise.race([
-      queryOne(
-        'SELECT * FROM users WHERE username = ?',
-        [username]
-      ),
-      new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('数据库查询超时')), 5000)
-      )
-    ]);
+    // 查询用户（添加超时保护，3秒内必须完成）
+    let user;
+    try {
+      user = await Promise.race([
+        queryOne(
+          'SELECT * FROM users WHERE username = ?',
+          [username]
+        ),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('数据库查询超时（3秒）')), 3000)
+        )
+      ]);
+      console.log('数据库查询完成，耗时:', Date.now() - startTime, 'ms');
+    } catch (dbError) {
+      console.error('数据库查询错误:', dbError.message, '耗时:', Date.now() - startTime, 'ms');
+      return errorResponse('数据库连接失败，请稍后重试', 503);
+    }
 
     if (!user) {
       return errorResponse('用户名或密码错误', 401);
