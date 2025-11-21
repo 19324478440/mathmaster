@@ -27,18 +27,23 @@ if (DB_TYPE === 'postgres') {
         user: process.env.DB_USER
       });
       
+      // URL 编码密码（处理特殊字符）
+      const encodedPassword = encodeURIComponent(process.env.DB_PASSWORD);
+      
       const pgPool = new PgPool({
       host: process.env.DB_HOST,
       user: process.env.DB_USER,
-      password: process.env.DB_PASSWORD,
+      password: process.env.DB_PASSWORD, // 使用原始密码，pg 库会自动处理
       database: process.env.DB_NAME || 'postgres',
       port: dbPort,
       ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
-      connectionTimeoutMillis: 3000,
+      connectionTimeoutMillis: 5000,
       idleTimeoutMillis: 30000,
       max: 2,
-      statement_timeout: 2000
+      statement_timeout: 3000
     });
+    
+    console.log('🔌 连接池已创建，用户:', process.env.DB_USER, '主机:', process.env.DB_HOST);
     pool = pgPool;
 
   // 转换 MySQL 占位符 ? 为 PostgreSQL 占位符 $1, $2, ...
