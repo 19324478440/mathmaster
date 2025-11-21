@@ -60,8 +60,8 @@ CREATE TABLE IF NOT EXISTS contacts (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- 插入演示用户（可选）
+-- 插入演示用户（可选）- 新用户初始状态为未闯关
 INSERT INTO users (username, password, name, grade, specialty, learning_goal, challenge_direction, completed_levels, notes_count, consecutive_days, points) 
-VALUES ('demo', 'demo', '演示用户', '高二', '函数与导数', '冲击高考数学145+', '函数综合题、导数应用', 12, 8, 15, 380)
+VALUES ('demo', 'demo', '演示用户', '高二', '函数与导数', '冲击高考数学145+', '函数综合题、导数应用', 0, 0, 0, 0)
 ON DUPLICATE KEY UPDATE username=username;
 

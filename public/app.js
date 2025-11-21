@@ -422,15 +422,21 @@ function loadUserProgress() {
 
 // 更新进度显示
 function updateProgressDisplay(progress) {
+    // 先清除所有关卡的完成状态
+    document.querySelectorAll('.level-item').forEach(element => {
+        element.classList.remove('completed');
+        const level = element.getAttribute('data-level');
+        element.innerHTML = level;
+    });
+    
+    // 然后根据数据库中的进度标记已完成的关卡
     for (const theme in progress) {
         const levels = progress[theme];
         levels.forEach(level => {
             const levelElement = document.querySelector(`.level-item[data-theme="${theme}"][data-level="${level.level}"]`);
-            if (levelElement) {
-                if (level.completed) {
-                    levelElement.classList.add('completed');
-                    levelElement.innerHTML = `<span>${level.level}</span> ✓`;
-                }
+            if (levelElement && level.completed) {
+                levelElement.classList.add('completed');
+                levelElement.innerHTML = `<span>${level.level}</span> ✓`;
             }
         });
     }

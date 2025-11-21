@@ -1,5 +1,8 @@
-// 通用数据库适配器 - 支持 MySQL 和 PostgreSQL
-const DB_TYPE = process.env.DB_TYPE || (process.env.DB_HOST && process.env.DB_HOST.includes('postgres') ? 'postgres' : 'mysql');
+// 通用数据库适配器 - 支持 MySQL, PostgreSQL, SQLite 和 JSON
+const fs = require('fs');
+const path = require('path');
+
+const DB_TYPE = process.env.DB_TYPE || 'mysql'; // Default to mysql for local
 
 let pool, query, queryOne, testConnection;
 
@@ -86,19 +89,29 @@ if (DB_TYPE === 'postgres') {
       });
     };
   }
-} else {
+} else if (DB_TYPE === 'mysql') {
   // MySQL 配置
   const mysql = require('mysql2/promise');
+  
+  // 从环境变量获取密码
+  const dbPassword = process.env.DB_PASSWORD || '';
+  
+  if (!dbPassword) {
+    console.log('⚠️  警告: 未设置 DB_PASSWORD 环境变量，将使用空密码');
+  }
+  
   const mysqlPool = mysql.createPool({
     host: process.env.DB_HOST || 'localhost',
     user: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD || '',
+    password: dbPassword,
     database: process.env.DB_NAME || 'mathmaster',
     waitForConnections: true,
     connectionLimit: 2,
     queueLimit: 0,
     connectTimeout: 5000
   });
+  
+  console.log(`✅ MySQL 连接池已创建 (host: localhost, user: root, database: mathmaster, password: ${dbPassword ? '***' : '(空)'})`);
 
   pool = mysqlPool;
 
@@ -147,6 +160,100 @@ if (DB_TYPE === 'postgres') {
       }
     });
   };
+} else if (DB_TYPE === 'sqlite') {
+  // SQLite for local dev
+  const sqlite3 = require('sqlite3').verbose();
+  const dbPath = path.join(__dirname, 'mathmaster.db');
+  
+  // Create DB file if not exists
+  if (!fs.existsSync(dbPath)) {
+    console.log('Creating SQLite database...');
+  }
+  
+  const db = new sqlite3.Database(dbPath, (err) => {
+    if (err) {
+      console.error('SQLite error:', err);
+    } else {
+      console.log('✅ SQLite database connected');
+    }
+  });
+  
+  db.serialize(() => {
+    // Run init.sql adapted for SQLite
+    const initSql = fs.readFileSync('init.sql', 'utf8');
+    // SQLite adaptations: remove ENGINE, AUTO_INCREMENT -> AUTOINCREMENT, etc.
+    const adaptedSql = initSql
+      .replace(/ENGINE=InnoDB DEFAULT CHARSET=utf8mb4/g, '')
+      .replace(/AUTO_INCREMENT/g, 'AUTOINCREMENT')
+      .replace(/CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci/g, '')
+      .replace(/ON UPDATE CURRENT_TIMESTAMP/g, '')
+      .replace(/TIMESTAMP DEFAULT CURRENT_TIMESTAMP/g, 'DATETIME DEFAULT (datetime("now"))')
+      .replace(/FOREIGN KEY \(user_id\) REFERENCES users\(id\) ON DELETE CASCADE/g, 'FOREIGN KEY (user_id) REFERENCES users(id)')
+      .replace(/FOREIGN KEY \(user_id\) REFERENCES users\(id\) ON DELETE SET NULL/g, 'FOREIGN KEY (user_id) REFERENCES users(id)')
+      .replace(/UNIQUE KEY unique_user_progress \(user_id, theme, level\)/g, 'UNIQUE (user_id, theme, level)');
+    
+    db.exec(adaptedSql, (err) => {
+      if (err) {
+        console.error('SQLite init error:', err);
+      } else {
+        console.log('✅ SQLite tables created');
+      }
+    });
+  });
+
+  query = async (sql, params = []) => {
+    return new Promise((resolve, reject) => {
+      db.all(sql, params, (err, rows) => {
+        if (err) {
+          console.error('SQLite query error:', err);
+          reject(err);
+        } else {
+          // For INSERT, get lastID
+          if (sql.trim().toUpperCase().startsWith('INSERT')) {
+            rows.insertId = db.lastID;
+          }
+          resolve(rows);
+        }
+      });
+    });
+  };
+
+  queryOne = async (sql, params = []) => {
+    return new Promise((resolve, reject) => {
+      db.get(sql, params, (err, row) => {
+        if (err) {
+          console.error('SQLite queryOne error:', err);
+          reject(err);
+        } else {
+          resolve(row || null);
+        }
+      });
+    });
+  };
+
+  testConnection = async () => {
+    return new Promise((resolve) => {
+      db.get('SELECT 1', (err) => {
+        if (err) {
+          console.error('❌ SQLite connection failed');
+          resolve(false);
+        } else {
+          console.log('✅ SQLite connection successful');
+          resolve(true);
+        }
+      });
+    });
+  };
+
+  pool = db;
+} else if (DB_TYPE === 'json') {
+  // JSON 文件数据库（最简单，无需配置）
+  const jsonDb = require('./db-json');
+  pool = null;
+  query = jsonDb.query;
+  queryOne = jsonDb.queryOne;
+  testConnection = jsonDb.testConnection;
+  console.log('✅ 使用 JSON 文件数据库（无需 MySQL 配置）');
 }
 
 module.exports = {

@@ -69,9 +69,9 @@ $$ language 'plpgsql';
 CREATE TRIGGER update_users_updated_at BEFORE UPDATE ON users
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
--- 插入演示用户（可选）
+-- 插入演示用户（可选）- 新用户初始状态为未闯关
 INSERT INTO users (username, password, name, grade, specialty, learning_goal, challenge_direction, completed_levels, notes_count, consecutive_days, points) 
-VALUES ('demo', 'demo', '演示用户', '高二', '函数与导数', '冲击高考数学145+', '函数综合题、导数应用', 12, 8, 15, 380)
+VALUES ('demo', 'demo', '演示用户', '高二', '函数与导数', '冲击高考数学145+', '函数综合题、导数应用', 0, 0, 0, 0)
 ON CONFLICT (username) DO NOTHING;
 
 
