@@ -2,10 +2,10 @@
   "version": 2,
   "buildCommand": "npm run build",
   "outputDirectory": "public",
-  "builds": [
+  "rewrites": [
     {
-      "src": "api/**/*.js",
-      "use": "@vercel/node"
+      "source": "/api/(.*)",
+      "destination": "/api/$1"
     }
   ],
   "routes": [
