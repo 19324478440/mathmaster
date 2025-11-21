@@ -1,9 +1,0 @@
-DB_TYPE=postgres
-DB_HOST=db.qhwocyizzfyedsmykwth.supabase.co
-DB_USER=postgres
-DB_PASSWORD=cgqosGADRUyFJP0p
-DB_NAME=postgres
-DB_PORT=5432
-JWT_SECRET=mathmaster_jwt_secret_key_2025
-NODE_ENV=production
-
