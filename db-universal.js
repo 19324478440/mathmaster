@@ -36,12 +36,17 @@ if (DB_TYPE === 'postgres') {
       password: process.env.DB_PASSWORD,
       database: process.env.DB_NAME || 'postgres',
       port: dbPort,
-      ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
-      connectionTimeoutMillis: 2000,
+      ssl: process.env.NODE_ENV === 'production' ? { 
+        rejectUnauthorized: false,
+        require: true 
+      } : false,
+      connectionTimeoutMillis: 1000, // 1秒连接超时
       idleTimeoutMillis: 30000,
-      max: 1, // 减少连接数，加快连接建立
-      statement_timeout: 2000,
-      query_timeout: 2000
+      max: 1, // 单个连接，减少开销
+      statement_timeout: 1500, // 1.5秒查询超时
+      query_timeout: 1500,
+      keepAlive: true,
+      keepAliveInitialDelayMillis: 0
     });
     
     console.log('🔌 连接池已创建，用户:', process.env.DB_USER, '主机:', process.env.DB_HOST, '端口:', dbPort);
@@ -59,11 +64,11 @@ if (DB_TYPE === 'postgres') {
         const queryStartTime = Date.now();
         const { sql: convertedSql, params: convertedParams } = convertQuery(sql, params);
         console.log('📊 执行查询:', convertedSql.substring(0, 50) + '...', '参数:', convertedParams.length);
-        // 添加超时保护（2秒）
+        // 添加超时保护（1.5秒）
         const result = await Promise.race([
           pgPool.query(convertedSql, convertedParams),
           new Promise((_, reject) => 
-            setTimeout(() => reject(new Error('数据库查询超时（2秒）')), 2000)
+            setTimeout(() => reject(new Error('数据库查询超时（1.5秒）')), 1500)
           )
         ]);
         console.log('✅ 查询完成，耗时:', Date.now() - queryStartTime, 'ms');

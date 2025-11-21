@@ -34,7 +34,7 @@ module.exports = async (req) => {
           [username]
         ),
         new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('数据库查询超时（3秒）')), 3000)
+          setTimeout(() => reject(new Error('数据库查询超时（2秒）')), 2000)
         )
       ]);
       console.log('数据库查询完成，耗时:', Date.now() - startTime, 'ms');
