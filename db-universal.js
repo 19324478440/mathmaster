@@ -33,17 +33,18 @@ if (DB_TYPE === 'postgres') {
       const pgPool = new PgPool({
       host: process.env.DB_HOST,
       user: process.env.DB_USER,
-      password: process.env.DB_PASSWORD, // 使用原始密码，pg 库会自动处理
+      password: process.env.DB_PASSWORD,
       database: process.env.DB_NAME || 'postgres',
       port: dbPort,
       ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
-      connectionTimeoutMillis: 5000,
+      connectionTimeoutMillis: 2000,
       idleTimeoutMillis: 30000,
-      max: 2,
-      statement_timeout: 3000
+      max: 1, // 减少连接数，加快连接建立
+      statement_timeout: 2000,
+      query_timeout: 2000
     });
     
-    console.log('🔌 连接池已创建，用户:', process.env.DB_USER, '主机:', process.env.DB_HOST);
+    console.log('🔌 连接池已创建，用户:', process.env.DB_USER, '主机:', process.env.DB_HOST, '端口:', dbPort);
     pool = pgPool;
 
   // 转换 MySQL 占位符 ? 为 PostgreSQL 占位符 $1, $2, ...
@@ -55,14 +56,17 @@ if (DB_TYPE === 'postgres') {
 
     query = async (sql, params = []) => {
       try {
+        const queryStartTime = Date.now();
         const { sql: convertedSql, params: convertedParams } = convertQuery(sql, params);
-        // 添加超时保护（4秒）
+        console.log('📊 执行查询:', convertedSql.substring(0, 50) + '...', '参数:', convertedParams.length);
+        // 添加超时保护（2秒）
         const result = await Promise.race([
           pgPool.query(convertedSql, convertedParams),
           new Promise((_, reject) => 
-            setTimeout(() => reject(new Error('数据库查询超时')), 4000)
+            setTimeout(() => reject(new Error('数据库查询超时（2秒）')), 2000)
           )
         ]);
+        console.log('✅ 查询完成，耗时:', Date.now() - queryStartTime, 'ms');
         // PostgreSQL 返回 result.rows，需要添加 insertId 兼容性
         const rows = result.rows || [];
         // 如果查询包含 RETURNING id，提取 id 作为 insertId
