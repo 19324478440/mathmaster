@@ -1,0 +1,28 @@
+# Supabase 数据库连接信息
+
+## 完整连接信息
+
+项目 ID: qhwocyizzfyedsmykwth
+密码: cgqosGADRUyFJP0p
+
+## 环境变量配置（用于 Vercel）
+
+DB_TYPE=postgres
+DB_HOST=db.qhwocyizzfyedsmykwth.supabase.co
+DB_USER=postgres
+DB_PASSWORD=cgqosGADRUyFJP0p
+DB_NAME=postgres
+DB_PORT=5432
+JWT_SECRET=mathmaster_jwt_secret_key_2025
+NODE_ENV=production
+
+## 完整连接字符串（URI 格式）
+
+postgresql://postgres:cgqosGADRUyFJP0p@db.qhwocyizzfyedsmykwth.supabase.co:5432/postgres
+
+## 下一步
+
+1. 初始化数据库（运行 init-postgres.sql）
+2. 部署到 Vercel
+3. 在 Vercel 环境变量中配置上述信息
+

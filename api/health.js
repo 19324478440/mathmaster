@@ -1,12 +1,8 @@
 // GET /api/health - 健康检查
 const { successResponse, query } = require('./_utils');
 
-module.exports = async (req, res) => {
-  // 支持 Vercel 的两种格式
+module.exports = async (req) => {
   if (req.method === 'OPTIONS') {
-    if (res) {
-      return res.status(200).end();
-    }
     return {
       statusCode: 200,
       headers: {
@@ -18,10 +14,10 @@ module.exports = async (req, res) => {
   }
 
   try {
-    // 测试数据库连接（不阻塞响应）
+    // 测试数据库连接（不阻塞响应，快速超时）
     const dbConnected = await Promise.race([
       query('SELECT 1').then(() => true).catch(() => false),
-      new Promise(resolve => setTimeout(() => resolve(false), 2000))
+      new Promise(resolve => setTimeout(() => resolve(false), 1000))
     ]);
     
     const response = {
@@ -31,11 +27,7 @@ module.exports = async (req, res) => {
       timestamp: new Date().toISOString()
     };
 
-    if (res && res.json) {
-      return res.status(200).json(response);
-    } else {
-      return successResponse(response);
-    }
+    return successResponse(response);
   } catch (error) {
     // 即使数据库连接失败，也返回服务可用状态
     const response = {
@@ -45,10 +37,6 @@ module.exports = async (req, res) => {
       timestamp: new Date().toISOString()
     };
 
-    if (res && res.json) {
-      return res.status(200).json(response);
-    } else {
-      return successResponse(response);
-    }
+    return successResponse(response);
   }
 };

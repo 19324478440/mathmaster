@@ -1,3 +1,5 @@
-module.exports = (req, res) => {
-  res.status(200).json({ ok: true });
+const { successResponse } = require('./_utils');
+
+module.exports = async (req) => {
+  return successResponse({ ok: true, message: 'API 测试成功' });
 };
