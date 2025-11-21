@@ -1,11 +1,19 @@
 // 共享工具函数
 const jwt = require('jsonwebtoken');
 // 延迟加载数据库模块，避免在模块加载时阻塞
+// 优先使用 Supabase REST API（如果环境变量已设置），否则使用直接数据库连接
 let dbModule = null;
 function getDbModule() {
   if (!dbModule) {
     try {
-      dbModule = require('../db-universal');
+      // 检查是否设置了 Supabase REST API 环境变量
+      if (process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
+        console.log('📡 使用 Supabase REST API');
+        dbModule = require('../db-supabase-rest');
+      } else {
+        console.log('🔌 使用直接数据库连接');
+        dbModule = require('../db-universal');
+      }
     } catch (error) {
       console.error('数据库模块加载失败:', error);
       // 返回占位函数
