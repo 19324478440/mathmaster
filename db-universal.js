@@ -19,17 +19,25 @@ if (DB_TYPE === 'postgres') {
   
   // 只有在环境变量存在时才创建连接池
   if (process.env.DB_HOST && process.env.DB_USER && process.env.DB_PASSWORD) {
+      const dbPort = parseInt(process.env.DB_PORT) || 5432;
+      console.log('🔌 数据库连接配置:', {
+        host: process.env.DB_HOST,
+        port: dbPort,
+        database: process.env.DB_NAME || 'postgres',
+        user: process.env.DB_USER
+      });
+      
       const pgPool = new PgPool({
       host: process.env.DB_HOST,
       user: process.env.DB_USER,
       password: process.env.DB_PASSWORD,
       database: process.env.DB_NAME || 'postgres',
-      port: process.env.DB_PORT || 5432,
+      port: dbPort,
       ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
-      connectionTimeoutMillis: 5000,
+      connectionTimeoutMillis: 3000,
       idleTimeoutMillis: 30000,
       max: 2,
-      statement_timeout: 4000
+      statement_timeout: 2000
     });
     pool = pgPool;
 
