@@ -1,48 +1,33 @@
-# Dependencies
-node_modules/
-package-lock.json
+# 临时文档文件
+*.md
+!README.md
 
-# Environment variables
-.env
-.env.local
-.env.production
+# 临时配置文件
+*.txt
+netlify.toml
+netlify-functions-wrapper.js
 
-# Database files
-*.db
+# 部署脚本（如果不需要）
+auto-deploy.ps1
+deploy-auto.js
+
+# 数据库文件（如果使用）
 *.sqlite
-*.sqlite3
+*.db
 data.json
 
-# Logs
-*.log
-npm-debug.log*
+# 环境变量文件
+.env
+.env.local
+vercel-env-*.txt
 
-# OS files
+# 日志文件
+*.log
+
+# 操作系统文件
 .DS_Store
 Thumbs.db
 
-# IDE
+# IDE 文件
 .vscode/
 .idea/
-*.swp
-*.swo
-
-# Build outputs
-.vercel/
-dist/
-build/
-
-# Test files
-test-*.js
-*-test.js
-check-*.js
-auto-*.js
-reset-*.js
-setup-*.js
-setup-*.bat
-start-*.ps1
-query
-
-# Temporary files
-*.tmp
-*.temp

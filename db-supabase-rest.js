@@ -55,7 +55,14 @@ async function supabaseRequest(table, method = 'GET', filters = {}, data = null)
     const requestStartTime = Date.now();
     console.log('📡 Supabase REST API 请求:', { method, url: url.substring(0, 100) + '...', table });
     
-    const response = await fetch(url, options);
+    // 添加超时保护（3秒）
+    const response = await Promise.race([
+      fetch(url, options),
+      new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Supabase REST API 请求超时（3秒）')), 3000)
+      )
+    ]);
+    
     const requestDuration = Date.now() - requestStartTime;
     console.log('✅ Supabase REST API 响应:', { status: response.status, duration: requestDuration + 'ms' });
     

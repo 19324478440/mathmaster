@@ -67,14 +67,19 @@ module.exports = async (req) => {
     }
 
     // 生成JWT token
+    const tokenStartTime = Date.now();
+    console.log('🔑 开始生成 JWT token');
     const token = jwt.sign(
       { id: user.id, username: user.username },
       JWT_SECRET,
       { expiresIn: '7d' }
     );
+    console.log('✅ JWT token 生成完成，耗时:', Date.now() - tokenStartTime, 'ms');
 
     // 返回用户信息（不包含密码）
-    return successResponse({
+    const responseStartTime = Date.now();
+    console.log('📤 开始构建响应');
+    const response = successResponse({
       token,
       user: {
         id: user.id,
@@ -92,6 +97,8 @@ module.exports = async (req) => {
         }
       }
     });
+    console.log('✅ 响应构建完成，总耗时:', Date.now() - startTime, 'ms');
+    return response;
   } catch (error) {
     console.error('登录错误:', error);
     return errorResponse('服务器内部错误', 500);
